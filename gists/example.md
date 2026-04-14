@@ -13,7 +13,7 @@ Let $U \subset \mathbb R^n$ be open and bounded. For $f \in H_0^1(U)$ there exis
 
 # Proof
 
-By way of contradiction suppose the inequality is false then consider $(f_n)_{n \in \mathbb N}$ in $H_0^1(U)$ such that
+By way of contradiction suppose the inequality is false then there exists $(f_n)_{n \in \mathbb N}$ in $H_0^1(U)$ such that
 \[
     \|f_n\|_{L_2(U)} = 1, \ \|\nabla f\|_{L_2}(U) = \frac1n.
 \]
@@ -21,7 +21,7 @@ The sequence is bounded in $H_0^1(U)$ and since $H_0^1$ is reflexive
 \[
     f_n \rightharpoonup f, \text{ weakly in } H_0^1(U),
 \]
-for some $f \in H_0^1(U)$. Apply Rellich-Kondrachov we can extract a subsequence so that
+for some $f \in H_0^1(U)$. Applying Rellich-Kondrachov we can extract a subsequence so that
 \[
     f_n \rightarrow f, \text{ strongly in } L^2(U),
 \]
