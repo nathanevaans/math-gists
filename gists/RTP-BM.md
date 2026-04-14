@@ -9,10 +9,8 @@ We consider a run-and-tumble particle with additional translational diffusion:
 dX_t = v\sigma_t\,dt + \sqrt{2D}\,dW_t,
 \]
 where $\sigma_t \in \{+1,-1\}$ switches at rate $\alpha$. The particle is confined to $[0,L]$, with
-\begin{itemize}
-    \item absorbing boundary at $x=0$,
-    \item reflecting boundary at $x=L$.
-\end{itemize}
+- absorbing boundary at $x=0$,
+- reflecting boundary at $x=L$.
 
 Define the mean first passage times
 \[
