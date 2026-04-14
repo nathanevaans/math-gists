@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     <title>Maths Gists</title>
 
+    <!-- Computer Modern (the default LaTeX font) -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/@fontsource/cmu-serif@1.0.3/index.min.css">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/aaaakshat/cm-web-fonts@latest/fonts.css">
+
     <!-- MathJax: renders $...$ and $$...$$ -->
     <script>
         window.MathJax = {
@@ -55,7 +61,7 @@
             padding: 8px 10px; border-radius: 5px; font-size: 12px; cursor: pointer;
             font-family: inherit;
         }
-        input[type=text] { cursor: text; }
+        input[type=text], input[type=search] { cursor: text; }
         button:hover { background: #2d2d3a; }
         button.primary { background: #5b6cff; border-color: #5b6cff; }
         button.primary:hover { background: #6d7dff; }
@@ -89,9 +95,9 @@
             border-radius: 6px;
             padding: 64px 80px;
             min-height: 680px;
-            font-family: "Latin Modern Roman", "Georgia", "Times New Roman", serif;
+            font-family: "Computer Modern Serif", "CMU Serif", "Latin Modern Roman", Georgia, "Times New Roman", serif;
             line-height: 1.6;
-            font-size: 17px;
+            font-size: 18px;
             overflow-x: auto;
         }
         #paper .empty {
@@ -99,19 +105,20 @@
             font-style: italic;
         }
         #paper h1.doc-title {
-            font-size: 30px;
+            font-size: 32px;
             text-align: center;
-            margin: 0 0 8px 0;
-            font-weight: 600;
-            font-family: "Latin Modern Roman", "Georgia", serif;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+            font-family: "Computer Modern Serif", "CMU Serif", "Latin Modern Roman", Georgia, serif;
         }
         #paper .doc-subtitle {
-            font-size: 16px;
+            font-size: 18px;
             text-align: center;
             font-weight: 400;
             font-style: italic;
-            color: #555;
-            margin: 0 0 12px 0;
+            color: #444;
+            margin: 0 0 14px 0;
+            font-family: "Computer Modern Serif", "CMU Serif", "Latin Modern Roman", Georgia, serif;
         }
         #paper .doc-date {
             text-align: center;
@@ -160,6 +167,8 @@
             <button id="refreshBtn">↻ Refresh list</button>
             <div class="row">
                 <label>Files in /gists</label>
+                <input type="search" id="filterInput" placeholder="Filter…" autocomplete="off"
+                       style="background:#23232e;color:#e8e8ee;border:1px solid #33333f;padding:7px 10px;border-radius:5px;font-size:12px;font-family:inherit;">
                 <div id="fileList"></div>
             </div>
             <div class="status" id="status">Loading…</div>
@@ -191,6 +200,33 @@
     const refreshBtn = document.getElementById("refreshBtn");
 
     let activeFile = null;
+    let allFiles = [];
+
+    function renderFileList(filter = "") {
+        fileListEl.innerHTML = "";
+        const f = filter.trim().toLowerCase();
+        const shown = f ? allFiles.filter(x => x.name.toLowerCase().includes(f)) : allFiles;
+        for (const file of shown) {
+            const el = document.createElement("div");
+            el.className = "file";
+            el.textContent = file.name;
+            el.title = file.name;
+            if (file.name === activeFile) el.classList.add("active");
+            el.addEventListener("click", () => loadFile(file, el));
+            fileListEl.appendChild(el);
+        }
+        if (allFiles.length === 0) {
+            statusEl.textContent = `No .tex or .md files in /${FOLDER}`;
+        } else {
+            statusEl.textContent = f
+                ? `${shown.length} of ${allFiles.length} match`
+                : `${allFiles.length} file${allFiles.length === 1 ? "" : "s"}`;
+        }
+    }
+
+    document.getElementById("filterInput").addEventListener("input", e => {
+        renderFileList(e.target.value);
+    });
 
     async function loadFileList() {
         fileListEl.innerHTML = "";
@@ -201,24 +237,10 @@
             const res = await fetch(apiUrl);
             if (!res.ok) throw new Error(`GitHub API ${res.status}`);
             const items = await res.json();
-            const files = items
+            allFiles = items
                 .filter(i => i.type === "file" && /\.(tex|md)$/i.test(i.name))
                 .sort((a, b) => a.name.localeCompare(b.name));
-
-            if (files.length === 0) {
-                statusEl.textContent = `No .tex or .md files in /${FOLDER}`;
-                return;
-            }
-
-            for (const f of files) {
-                const el = document.createElement("div");
-                el.className = "file";
-                el.textContent = f.name;
-                el.title = f.name;
-                el.addEventListener("click", () => loadFile(f, el));
-                fileListEl.appendChild(el);
-            }
-            statusEl.textContent = `${files.length} file${files.length === 1 ? "" : "s"}`;
+            renderFileList(document.getElementById("filterInput").value);
         } catch (err) {
             statusEl.textContent = `Error: ${err.message}`;
             paperEl.innerHTML = `<div class="empty">
