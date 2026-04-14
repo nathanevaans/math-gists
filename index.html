@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Maths Gists</title>
+
+    <!-- MathJax: renders $...$ and $$...$$ -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                tags: 'ams'
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+    <!-- Marked: markdown -> HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; padding: 20px; min-height: 100vh;
+            display: flex; justify-content: center; align-items: flex-start;
+            background: #0e0e12; color: #e8e8ee;
+            font-family: -apple-system, system-ui, sans-serif;
+        }
+        #wrap {
+            display: flex; gap: 20px; background: #17171f;
+            padding: 22px; border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-width: 1200px; width: 100%;
+        }
+        #controls {
+            width: 260px; flex: 0 0 260px;
+            min-height: 680px;
+            display: flex; flex-direction: column;
+        }
+        #titleBlock { flex: 0 0 auto; }
+        #titleBlock h1 { font-size: 16px; margin: 0; font-weight: 600; }
+        #titleBlock .sub { color: #888; font-size: 11px; line-height: 1.5; margin-top: 6px; }
+        #controlsInner {
+            flex: 1; display: flex; flex-direction: column;
+            gap: 14px; font-size: 13px; margin-top: 18px; min-height: 0;
+        }
+        .row { display: flex; flex-direction: column; gap: 4px; }
+        .row label { color: #aaa; font-size: 12px; }
+        button, input[type=text] {
+            background: #23232e; color: #e8e8ee; border: 1px solid #33333f;
+            padding: 8px 10px; border-radius: 5px; font-size: 12px; cursor: pointer;
+            font-family: inherit;
+        }
+        input[type=text] { cursor: text; }
+        button:hover { background: #2d2d3a; }
+        button.primary { background: #5b6cff; border-color: #5b6cff; }
+        button.primary:hover { background: #6d7dff; }
+        button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        #fileList {
+            flex: 1; min-height: 0;
+            overflow-y: auto;
+            border: 1px solid #23232e; border-radius: 5px;
+            background: #13131a;
+        }
+        .file {
+            padding: 8px 12px; font-size: 12px; cursor: pointer;
+            border-bottom: 1px solid #1f1f28;
+            color: #cfcfd8; font-family: monospace;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .file:hover { background: #1d1d26; }
+        .file.active { background: #2a2a3c; color: #fff; border-left: 3px solid #5b6cff; padding-left: 9px; }
+        .file:last-child { border-bottom: none; }
+
+        .status {
+            font-family: monospace; font-size: 11px; color: #888;
+            padding: 4px 0; min-height: 20px;
+        }
+
+        #paper {
+            flex: 1;
+            background: #f6f4ee;
+            color: #1a1a1a;
+            border-radius: 6px;
+            padding: 64px 80px;
+            min-height: 680px;
+            font-family: "Latin Modern Roman", "Georgia", "Times New Roman", serif;
+            line-height: 1.6;
+            font-size: 17px;
+            overflow-x: auto;
+        }
+        #paper .empty {
+            color: #8a8275; text-align: center; margin-top: 200px;
+            font-style: italic;
+        }
+        #paper h1.doc-title {
+            font-size: 30px;
+            text-align: center;
+            margin: 0 0 8px 0;
+            font-weight: 600;
+            font-family: "Latin Modern Roman", "Georgia", serif;
+        }
+        #paper .doc-subtitle {
+            font-size: 16px;
+            text-align: center;
+            font-weight: 400;
+            font-style: italic;
+            color: #555;
+            margin: 0 0 12px 0;
+        }
+        #paper .doc-date {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 44px;
+        }
+        #paper .doc-body p { margin: 0 0 1em 0; }
+        #paper .doc-body h1 { font-size: 22px; margin: 1.6em 0 0.5em; }
+        #paper .doc-body h2 { font-size: 19px; margin: 1.4em 0 0.4em; }
+        #paper .doc-body h3 { font-size: 17px; margin: 1.2em 0 0.3em; font-style: italic; }
+        #paper .doc-body ul, #paper .doc-body ol { padding-left: 1.6em; margin: 0 0 1em; }
+        #paper .doc-body li { margin-bottom: 0.3em; }
+        #paper .doc-body code {
+            background: #e8e4d8; padding: 1px 5px; border-radius: 3px;
+            font-size: 0.88em; font-family: "SF Mono", Menlo, monospace;
+        }
+        #paper .doc-body pre {
+            background: #e8e4d8; padding: 12px 16px; border-radius: 4px;
+            overflow-x: auto; font-size: 0.9em;
+        }
+        #paper .doc-body pre code { background: none; padding: 0; }
+        #paper .doc-body blockquote {
+            border-left: 3px solid #c0b8a0; margin: 1em 0; padding: 0.2em 1em;
+            color: #555; font-style: italic;
+        }
+        #paper .doc-body hr {
+            border: none; border-top: 1px solid #d4cdb8; margin: 2em 0;
+        }
+        #paper .doc-body a { color: #5b5bdc; }
+        #paper .doc-body table { border-collapse: collapse; margin: 1em 0; }
+        #paper .doc-body th, #paper .doc-body td {
+            border: 1px solid #c0b8a0; padding: 6px 12px;
+        }
+    </style>
+</head>
+<body>
+<div id="wrap">
+    <div id="controls">
+        <div id="titleBlock">
+            <h1>Maths Gists</h1>
+            <div class="sub">Markdown + LaTeX notes from the repo</div>
+        </div>
+
+        <div id="controlsInner">
+            <button id="refreshBtn">↻ Refresh list</button>
+            <div class="row">
+                <label>Files in /gists</label>
+                <div id="fileList"></div>
+            </div>
+            <div class="status" id="status">Loading…</div>
+        </div>
+    </div>
+
+    <div id="paper">
+        <div class="empty">Select a gist from the list.</div>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // CONFIG — set these to match your repo.
+    //   REPO:   "username/reponame" on GitHub
+    //   BRANCH: branch name (usually "main" or "master")
+    //   FOLDER: folder in the repo containing .tex / .md files
+    // ============================================================
+    const REPO   = "nathanevaans/math-gists";
+    const BRANCH = "main";
+    const FOLDER = "gists";
+
+    // ============================================================
+    // File discovery via GitHub API.
+    // ============================================================
+    const fileListEl = document.getElementById("fileList");
+    const statusEl = document.getElementById("status");
+    const paperEl = document.getElementById("paper");
+    const refreshBtn = document.getElementById("refreshBtn");
+
+    let activeFile = null;
+
+    async function loadFileList() {
+        fileListEl.innerHTML = "";
+        statusEl.textContent = "Fetching file list…";
+
+        const apiUrl = `https://api.github.com/repos/${REPO}/contents/${FOLDER}?ref=${BRANCH}`;
+        try {
+            const res = await fetch(apiUrl);
+            if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+            const items = await res.json();
+            const files = items
+                .filter(i => i.type === "file" && /\.(tex|md)$/i.test(i.name))
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+            if (files.length === 0) {
+                statusEl.textContent = `No .tex or .md files in /${FOLDER}`;
+                return;
+            }
+
+            for (const f of files) {
+                const el = document.createElement("div");
+                el.className = "file";
+                el.textContent = f.name;
+                el.title = f.name;
+                el.addEventListener("click", () => loadFile(f, el));
+                fileListEl.appendChild(el);
+            }
+            statusEl.textContent = `${files.length} file${files.length === 1 ? "" : "s"}`;
+        } catch (err) {
+            statusEl.textContent = `Error: ${err.message}`;
+            paperEl.innerHTML = `<div class="empty">
+                Could not load file list.<br><br>
+                Check that REPO, BRANCH, and FOLDER are set correctly
+                at the top of the &lt;script&gt; block, and that the repo is public.
+            </div>`;
+        }
+    }
+
+    async function loadFile(fileMeta, el) {
+        // Highlight selection
+        document.querySelectorAll(".file.active").forEach(e => e.classList.remove("active"));
+        el.classList.add("active");
+        activeFile = fileMeta.name;
+
+        statusEl.textContent = `Loading ${fileMeta.name}…`;
+        paperEl.innerHTML = `<div class="empty">Loading…</div>`;
+
+        try {
+            const res = await fetch(fileMeta.download_url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const text = await res.text();
+            renderDoc(text);
+            statusEl.textContent = fileMeta.name;
+        } catch (err) {
+            paperEl.innerHTML = `<div class="empty">Error loading file: ${err.message}</div>`;
+            statusEl.textContent = `Error: ${err.message}`;
+        }
+    }
+
+    // ============================================================
+    // Document rendering.
+    //
+    // File format (front-matter is optional):
+    //
+    //   ---
+    //   title: The Cauchy-Schwarz Inequality
+    //   subtitle: A short note
+    //   date: 2026-04-14
+    //   ---
+    //
+    //   Body text in markdown, with $inline$ and $$display$$ math.
+    //
+    // If there's no front-matter, the first "# Heading" is used as
+    // the title and an immediately-following "*italic line*" as the
+    // subtitle.
+    // ============================================================
+    function parseFrontMatter(src) {
+        const meta = {};
+        let body = src;
+        const fmMatch = src.match(/^---\s*\n([\s\S]*?)\n---\s*\n?/);
+        if (fmMatch) {
+            const block = fmMatch[1];
+            for (const line of block.split("\n")) {
+                const m = line.match(/^([A-Za-z_][\w-]*)\s*:\s*(.*)$/);
+                if (m) meta[m[1].toLowerCase()] = m[2].trim().replace(/^["']|["']$/g, "");
+            }
+            body = src.slice(fmMatch[0].length);
+            return { meta, body };
+        }
+
+        // Fallback: first "# title" line, optional "*subtitle*" line.
+        const lines = body.split("\n");
+        let i = 0;
+        while (i < lines.length && lines[i].trim() === "") i++;
+        if (i < lines.length && /^#\s+/.test(lines[i])) {
+            meta.title = lines[i].replace(/^#\s+/, "").trim();
+            i++;
+            while (i < lines.length && lines[i].trim() === "") i++;
+            const subMatch = i < lines.length && lines[i].match(/^\*(.+)\*\s*$/);
+            if (subMatch) { meta.subtitle = subMatch[1].trim(); i++; }
+            body = lines.slice(i).join("\n");
+        }
+        return { meta, body };
+    }
+
+    // Protect math spans from markdown processing, then restore.
+    function renderMarkdownWithMath(src) {
+        const stash = [];
+        const placeholder = i => `@@MATH${i}@@`;
+
+        // $$...$$ display first, then $...$ inline
+        let protectedSrc = src.replace(/\$\$([\s\S]+?)\$\$/g, (m) => {
+            stash.push(m); return placeholder(stash.length - 1);
+        });
+        protectedSrc = protectedSrc.replace(/(^|[^\\])\$([^\n$]+?)\$/g, (m, pre, body) => {
+            stash.push("$" + body + "$"); return pre + placeholder(stash.length - 1);
+        });
+        // \[...\] and \(...\)
+        protectedSrc = protectedSrc.replace(/\\\[([\s\S]+?)\\\]/g, (m) => {
+            stash.push(m); return placeholder(stash.length - 1);
+        });
+        protectedSrc = protectedSrc.replace(/\\\(([\s\S]+?)\\\)/g, (m) => {
+            stash.push(m); return placeholder(stash.length - 1);
+        });
+
+        let html = marked.parse(protectedSrc);
+        html = html.replace(/@@MATH(\d+)@@/g, (_, i) => stash[parseInt(i, 10)]);
+        return html;
+    }
+
+    function renderDoc(src) {
+        const { meta, body } = parseFrontMatter(src);
+        const bodyHtml = renderMarkdownWithMath(body);
+
+        let html = "";
+        if (meta.title) html += `<h1 class="doc-title">${escapeHtml(meta.title)}</h1>`;
+        if (meta.subtitle) html += `<div class="doc-subtitle">${escapeHtml(meta.subtitle)}</div>`;
+        if (meta.date) html += `<div class="doc-date">${escapeHtml(meta.date)}</div>`;
+        html += `<div class="doc-body">${bodyHtml}</div>`;
+
+        paperEl.innerHTML = html;
+
+        // Retypeset math
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([paperEl]).catch(err => console.warn(err));
+        }
+    }
+
+    function escapeHtml(s) {
+        return s.replace(/[&<>"']/g, c => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        }[c]));
+    }
+
+    refreshBtn.addEventListener("click", loadFileList);
+    loadFileList();
+</script>
+</body>
+</html>
