@@ -8,7 +8,7 @@ date: 2026-04-14
 
 Let $U \subset \mathbb R^n$ be open and bounded. For $f \in H_0^1(U)$ there exists $C >0$ such that
 \[
-    \|f\|_{H_0^1} \leq C \|\nabla f\|_{H_0^1}.
+    \|f\|_{L^2} \leq C \|\nabla f\|_{L^2}.
 \]
 
 # Proof
